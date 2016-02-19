@@ -58,6 +58,30 @@ public class UIManager : MonoBehaviour
         {
             Debug.Log("UIManager: PlayerCash component not found");
         }
+
+        GameEvents.OnGameStep += OnGameStep;
+        GameEvents.OnSharesChanged += OnSharesChanged;
+        GameEvents.OnCashChanged += OnCashChanged;
+    }
+
+    public void OnCashChanged(int cash)
+    {
+
+    }
+
+    public void OnGameStep()
+    {
+
+    }
+
+    public void OnSharesChanged(Stock stock)
+    {
+
+    }
+
+    public void OnCashChanged(float cash)
+    {
+        m_playerCash.text = cash.ToString("$#.00");
     }
 
     public void DisplayMarkets(List<Stock> markets)
@@ -68,11 +92,6 @@ public class UIManager : MonoBehaviour
     public void DisplayPortfolio(List<Stock> portfolio)
     {
         m_tickerGrid.DisplayPortfolio(portfolio);
-    }
-
-    public void OnCashChanged(float cash)
-    {
-        m_playerCash.text = cash.ToString("$#.00");
     }
 
     public void OnClickMarkets()

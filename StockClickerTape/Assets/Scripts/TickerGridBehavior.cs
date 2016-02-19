@@ -54,7 +54,7 @@ public class TickerGridBehavior : MonoBehaviour
                 GameObject.Destroy(goStockTicker);
             }
             m_displayStocks.Add(goStockTicker);
-            stockTicker.InitializeStockSymbol(stock.ID, stock.Symbol, stock.CurrentPrice, stock.Shares, gameManager);
+            stockTicker.InitializeStockSymbol(stock, gameManager);
         }
     }
 

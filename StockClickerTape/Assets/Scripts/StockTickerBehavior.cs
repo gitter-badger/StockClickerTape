@@ -15,58 +15,22 @@ public class StockTickerBehavior : MonoBehaviour
     protected RawImage m_graph;
 
     // data
-    protected string m_strSymbol;
-    public string Symbol
+    protected Stock m_stock;
+    public Stock StockRef
     {
         get
         {
-            return m_strSymbol;
-        }
-    }
-
-    protected float m_fPrice;
-    public float Price
-    {
-        get
-        {
-            return m_fPrice;
-        }
-        set
-        {
-            m_fPrice = value;
-        }
-    }
-    
-    protected int m_nShares;
-    public int Shares
-    {
-        get
-        {
-            return m_nShares;
-        }
-        set
-        {
-            m_nShares = value;
-        }
-    }
-
-    protected int m_nID;
-    public int ID
-    {
-        get
-        {
-            return m_nID;
+            return m_stock;
         }
     }
 
     // called after ctor, before Start() by TickerGridBehavior
-    public void InitializeStockSymbol(int ID, string symbol, float price, int shares, GameManager gameManager)
+    public void InitializeStockSymbol(Stock stock, GameManager gameManager)
     {
-        m_nID = ID;
-        m_strSymbol = symbol;
-        m_fPrice = price;
-        m_nShares = shares;
+        m_stock = stock;
         m_gameManager = gameManager;
+        GameEvents.OnSharesChanged += OnSharesChanged;
+        GameEvents.OnGameStep += OnGameStep;
     }
 
     // Use this for initialization
@@ -101,37 +65,53 @@ public class StockTickerBehavior : MonoBehaviour
         }
         if (m_symbol != null)
         {
-            m_symbol.text = Symbol;
+            m_symbol.text = StockRef.Symbol;
         }
         if (m_price != null)
         {
-            m_price.text = m_fPrice.ToString("$#.00");
+            m_price.text = StockRef.CurrentPrice.ToString("$#.00");
         }
         if (m_shares != null)
         {
-            m_shares.text = m_nShares.ToString();
+            m_shares.text = StockRef.Shares.ToString();
         }
         if (m_graph != null)
         {
         }
     }
 
+    public void OnDestroy()
+    {
+        GameEvents.OnGameStep -= OnGameStep;
+        GameEvents.OnSharesChanged -= OnSharesChanged;
+    }
+
     public void OnStockClicked()
     {
         Debug.Log(m_symbol.text + " clicked!");
-        if (!m_gameManager.OnStockClicked(ID))
-        {
-            GameObject.Destroy(gameObject);
-        }
+        m_gameManager.OnStockClicked(StockRef.ID);
     }
 
     public void OnGameStep()
     {
-
+        if (m_price != null)
+        {
+            m_price.text = StockRef.CurrentPrice.ToString("$#.00");
+        }
     }
-	
-	// Update is called once per frame
-	void Update () {
-	
-	}
+
+    public void OnSharesChanged(Stock refStock)
+    {
+        if (StockRef.ID == refStock.ID) // I'd like the actual references to be the same -- should check this
+        {
+            if (StockRef.Shares <= 0)
+            {
+                GameObject.Destroy(gameObject);
+            }
+            else if (m_shares != null)
+            {
+                m_shares.text = StockRef.Shares.ToString();
+            }
+        }
+    }
 }

@@ -4,9 +4,8 @@ using System.Collections.Generic;
 
 public class GameManager : MonoBehaviour
 {
-    public GameEvents gameEvents;
-
     public UIManager uiManager;
+    public GameStep gameStep;
 
     public float PlayerInitialCash;
 
@@ -53,6 +52,10 @@ public class GameManager : MonoBehaviour
         {
             Debug.Log("GameManager: UIManager reference not set");
         }
+        if (gameStep == null)
+        {
+            Debug.Log("GameManager: GameStep reference not set");
+        }
 
         m_markets = new List<Stock>();
         m_portfolio = new List<Stock>();
@@ -61,18 +64,14 @@ public class GameManager : MonoBehaviour
         
         foreach (string symbol in StockSymbols)
         {
-            Stock stock = new Stock();
+            Stock stock = Stock.MakeStock(m_uniqueID++, symbol, 100f);
             if (stock != null)
             {
-                stock.ID = m_uniqueID++;
-                stock.Symbol = symbol;
-                stock.BuyValue = 0f;
-                stock.SellValue = 0f;
-                stock.Shares = 0;
-                stock.CurrentPrice = 100f;
+                m_markets.Add(stock);
             }
-            m_markets.Add(stock);
         }
+
+        gameStep.SimulateTime();
     }
 
     public Stock GetMarketStock(int ID)
@@ -112,11 +111,11 @@ public class GameManager : MonoBehaviour
         }
 	}
     
-    public bool OnStockClicked(int ID)
+    public void OnStockClicked(int ID)
     {
         Stock marketStock = null;
         Stock portfolioStock = null;
-        switch (uiManager.UIState)
+        switch (uiManager.UIState) // don't like referencing uiManager here
         {
             case UIManager.EUIState.Markets: // BUY
                 // find the stock
@@ -130,22 +129,27 @@ public class GameManager : MonoBehaviour
                         portfolioStock = GetPortfolioStock(ID);
                         if (portfolioStock == null)
                         {
-                            portfolioStock = new Stock();
-                            portfolioStock.ID = ID;
-                            portfolioStock.Symbol = marketStock.Symbol;
-                            portfolioStock.Shares = 1;
-                            portfolioStock.CurrentPrice = marketStock.CurrentPrice;
-                            portfolioStock.BuyValue = marketStock.CurrentPrice;
-                            portfolioStock.SellValue = marketStock.CurrentPrice; // should account for bonuses that let you buy more than 1 share temporarily
-                            m_portfolio.Add(portfolioStock);
+                            marketStock = GetMarketStock(ID);
+                            if (marketStock != null)
+                            {
+                                marketStock.Shares = 1;
+                                marketStock.CostBasis = marketStock.CurrentPrice;
+                                marketStock.SellValue = marketStock.CurrentPrice;
+                                GameEvents.BroadcastSharesChanged(marketStock);
+                                m_portfolio.Add(marketStock);
+                                PlayerCash -= marketStock.CurrentPrice;
+                                GameEvents.BroadcastCashChanged(PlayerCash);
+                            }
                         }
                         else
                         {
-                            ++portfolioStock.Shares;
-                            portfolioStock.BuyValue += marketStock.CurrentPrice;
+                            ++portfolioStock.Shares; // could calculate other values based on the fundamentals of Shares and Price
+                            portfolioStock.CostBasis += marketStock.CurrentPrice;
                             portfolioStock.SellValue = marketStock.CurrentPrice * portfolioStock.Shares;
+                            GameEvents.BroadcastSharesChanged(portfolioStock);
+                            PlayerCash -= marketStock.CurrentPrice;
+                            GameEvents.BroadcastCashChanged(PlayerCash);
                         }
-                        PlayerCash -= marketStock.CurrentPrice;
                     }
                 }
                 break;
@@ -159,12 +163,13 @@ public class GameManager : MonoBehaviour
                     {
                         --portfolioStock.Shares;
                         PlayerCash += portfolioStock.CurrentPrice;
+                        GameEvents.BroadcastSharesChanged(portfolioStock);
+                        GameEvents.BroadcastCashChanged(PlayerCash);
                     }
                     if (portfolioStock.Shares <= 0)
                     {
                         m_portfolio.Remove(portfolioStock);
                         uiManager.OnCashChanged(PlayerCash);
-                        return false;
                     }
                 }
                 break;
@@ -172,7 +177,6 @@ public class GameManager : MonoBehaviour
                 break;
         }
         uiManager.OnCashChanged(PlayerCash);
-        return true;
     }
 
 }
