@@ -25,8 +25,6 @@ public class TickerGridBehavior : MonoBehaviour
 
     public void DisplayMarkets(List<Stock> markets)
     {
-        Debug.Log("Found " + markets.Count + " symbols");
-
         // delete previous elements
         foreach (GameObject go in m_displayStocks)
         {
@@ -68,12 +66,5 @@ public class TickerGridBehavior : MonoBehaviour
 
         DisplayMarkets(portfolio);
     }
-
-    public void RefreshView()
-    {
-        //foreach (GameObject go in m_displayStocks)
-        {
-
-        }
-    }
+    
 }

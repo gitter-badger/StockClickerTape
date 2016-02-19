@@ -21,6 +21,7 @@ public class GameStep : MonoBehaviour
 
     public void SimulateTime()
     {
+        Debug.Log("Simulating " + StartupSimulationTime + " seconds of gameplay...");
         float runner = 0f;
         for (runner = StepTime; runner <= StartupSimulationTime; runner += StepTime)
         {
@@ -31,6 +32,14 @@ public class GameStep : MonoBehaviour
         }
         // account for fractions of a game step by subtracting the fraction from the current time
         fLastStep = Time.time - (StartupSimulationTime - runner - StepTime); // total sim time - simulated time
+
+        Stock testStock = gameManager.Markets[0];
+        Debug.LogFormat(testStock.Symbol + " history: " +
+            testStock.GetPriceHistoryFromCurrentStep(4) + ", " +
+            testStock.GetPriceHistoryFromCurrentStep(3) + ", " +
+            testStock.GetPriceHistoryFromCurrentStep(2) + ", " +
+            testStock.GetPriceHistoryFromCurrentStep(1) + ", " +
+            testStock.GetPriceHistoryFromCurrentStep(0));
     }
 	
 	// Update is called once per frame
