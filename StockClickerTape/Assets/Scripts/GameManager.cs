@@ -11,6 +11,10 @@ public class GameManager : MonoBehaviour
 
     public string[] StockSymbols;
 
+    public MarketEvents[] marketEvents;
+
+    protected MarketEvents m_marketEvent;
+
     protected List<Stock> m_markets;
     public List<Stock> Markets
     {
@@ -60,6 +64,8 @@ public class GameManager : MonoBehaviour
         m_markets = new List<Stock>();
         m_portfolio = new List<Stock>();
 
+        m_marketEvent = null;
+
         m_uniqueID = 0;
         
         foreach (string symbol in StockSymbols)
@@ -108,9 +114,50 @@ public class GameManager : MonoBehaviour
             m_bSetup = true;
             uiManager.OnClickMarkets();
             uiManager.OnCashChanged(PlayerCash);
+            return;
         }
-	}
-    
+
+        // determine if any market events occur this frame
+        if (m_marketEvent == null)
+        {
+            m_marketEvent = marketEvents[0];
+            GameEvents.BroadcastMarketEvent(m_marketEvent, null);
+            return;
+        }
+        /*
+        List<MarketEvents> selected = new List<MarketEvents>();
+        foreach (MarketEvents marketEvent in marketEvents)
+        {
+            float probability = Time.deltaTime * 1000f / (marketEvent.Periodicity * 1000f);
+            float rando = Random.Range(0f, 1000f);
+            if (rando < probability)
+            {
+                Debug.Log("Market Event: " + marketEvent.EventType.ToString());
+                selected.Add(marketEvent);
+            }
+        }
+        if (selected.Count > 0)
+        {
+            int select = Random.Range(0, selected.Count);
+            m_marketEvent = selected[select];
+            selected.Clear();
+            Stock stockAffected = null;
+            switch (m_marketEvent.StocksAffected)
+            {
+                case MarketEvents.EStocksAffected.One:
+                    stockAffected = Markets[Random.Range(0, Markets.Count)];
+                    break;
+                case MarketEvents.EStocksAffected.All:
+                    break;
+                default:
+                    break;
+            }
+            GameEvents.BroadcastMarketEvent(m_marketEvent, stockAffected);
+            Debug.Log("Market Event: " + m_marketEvent.EventType.ToString());
+        }
+        */
+    }
+
     public void OnStockClicked(int ID)
     {
         Stock marketStock = null;

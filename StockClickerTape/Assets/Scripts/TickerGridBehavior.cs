@@ -43,9 +43,6 @@ public class TickerGridBehavior : MonoBehaviour
             goStockTicker.transform.SetParent(this.transform);
             m_goStockPanels.Add(goStockTicker);
         }
-
-        Debug.Log(name + " Start()");
-
     }
 
     public void DisplayMarkets(List<Stock> markets)
@@ -61,7 +58,6 @@ public class TickerGridBehavior : MonoBehaviour
 
         // make grid of stock ticker symbols
         List<GameObject>.Enumerator iterStockTicker = m_goStockPanels.GetEnumerator();
-        Debug.Log(m_goStockPanels.Count + " elements found");
         int i = 0;
         foreach (Stock stock in markets)
         {

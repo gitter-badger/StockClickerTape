@@ -32,8 +32,6 @@ public class GameStep : MonoBehaviour
         }
         // account for fractions of a game step by subtracting the fraction from the current time
         fLastStep = Time.time - (StartupSimulationTime - runner - StepTime); // total sim time - simulated time
-
-        Stock testStock = gameManager.Markets[0];
     }
 	
 	// Update is called once per frame

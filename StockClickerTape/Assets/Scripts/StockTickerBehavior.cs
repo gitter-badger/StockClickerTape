@@ -163,8 +163,6 @@ public class StockTickerBehavior : MonoBehaviour
         --m_nStepsToScaleRefresh;
         if (m_graphLines == null)
         {
-            Debug.Log("Setting up line renderers for " + StockRef.Symbol);
-
             xMin = m_graphRect.position.x - m_graphRect.rect.xMax / 2;
             xMax = m_graphRect.position.x + m_graphRect.rect.xMax / 2;
             yMin = m_graphRect.position.y - m_graphRect.rect.yMax / 2;

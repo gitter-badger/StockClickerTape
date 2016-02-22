@@ -25,6 +25,7 @@ public class UIManager : MonoBehaviour
 
     protected TickerGridBehavior m_tickerGrid;
     protected Text m_playerCash;
+    protected TickerTapeBehavior m_tickerTape;
 
     public void Start()
     {
@@ -45,9 +46,11 @@ public class UIManager : MonoBehaviour
                 case "PlayerCash":
                     m_playerCash = child.GetComponent<Text>();
                     break;
+                case "TickerTape":
+                    m_tickerTape = child.GetComponent<TickerTapeBehavior>();
+                    break;
                 default:
                     break;
-
             }
         }
         if (m_tickerGrid == null)
@@ -58,10 +61,17 @@ public class UIManager : MonoBehaviour
         {
             Debug.Log("UIManager: PlayerCash component not found");
         }
+        if (m_tickerTape == null)
+        {
+            Debug.Log("UIManager: TickerText component not found");
+        }
 
         GameEvents.OnGameStep += OnGameStep;
         GameEvents.OnSharesChanged += OnSharesChanged;
         GameEvents.OnCashChanged += OnCashChanged;
+        GameEvents.OnMarketEvent += OnMarketEvent;
+
+        m_tickerTape.InitializeData();
     }
 
     public void OnCashChanged(int cash)
@@ -75,6 +85,11 @@ public class UIManager : MonoBehaviour
     }
 
     public void OnSharesChanged(Stock stock)
+    {
+
+    }
+
+    public void OnMarketEvent(MarketEvents marketEvent, Stock stock)
     {
 
     }
