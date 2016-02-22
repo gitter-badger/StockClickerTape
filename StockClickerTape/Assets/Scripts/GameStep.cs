@@ -34,12 +34,6 @@ public class GameStep : MonoBehaviour
         fLastStep = Time.time - (StartupSimulationTime - runner - StepTime); // total sim time - simulated time
 
         Stock testStock = gameManager.Markets[0];
-        Debug.LogFormat(testStock.Symbol + " history: " +
-            testStock.GetPriceHistoryFromCurrentStep(4) + ", " +
-            testStock.GetPriceHistoryFromCurrentStep(3) + ", " +
-            testStock.GetPriceHistoryFromCurrentStep(2) + ", " +
-            testStock.GetPriceHistoryFromCurrentStep(1) + ", " +
-            testStock.GetPriceHistoryFromCurrentStep(0));
     }
 	
 	// Update is called once per frame

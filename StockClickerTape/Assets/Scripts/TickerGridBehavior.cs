@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -6,8 +7,11 @@ public class TickerGridBehavior : MonoBehaviour
 {
     public GameObject StockTicker;
     public GameManager gameManager;
+    public int NumberOfStockPanels;
 
-    protected List<GameObject> m_displayStocks;
+    protected ScrollRect m_scrollRect;
+    protected List<StockTickerBehavior> m_displayStocks;
+    protected List<GameObject> m_goStockPanels;
 
 	// Use this for initialization
 	void Start()
@@ -19,51 +23,73 @@ public class TickerGridBehavior : MonoBehaviour
             return;
         }
 
-        m_displayStocks = new List<GameObject>();
+        m_goStockPanels = new List<GameObject>();
+        m_displayStocks = new List<StockTickerBehavior>();
 
-	}
-
-    public void DisplayMarkets(List<Stock> markets)
-    {
-        // delete previous elements
-        foreach (GameObject go in m_displayStocks)
+        m_scrollRect = GetComponent<ScrollRect>();
+        if (m_scrollRect == null)
         {
-            GameObject.Destroy(go);
+            Debug.Log(this.name + ": ScrollRect component not found");
         }
 
-        // make grid of stock ticker symbols
-        foreach (Stock stock in markets)
+        for (int i = 0; i < NumberOfStockPanels; ++i)
         {
-            // instantiate the grid UI object
             GameObject goStockTicker = GameObject.Instantiate(StockTicker);
             if (goStockTicker == null)
             {
                 Debug.Log("TickerGridBehavior: could not instantiate StockTicker prefab");
                 continue;
             }
+            goStockTicker.transform.SetParent(this.transform);
+            m_goStockPanels.Add(goStockTicker);
+        }
+
+        Debug.Log(name + " Start()");
+
+    }
+
+    public void DisplayMarkets(List<Stock> markets)
+    {
+        Debug.Log(name + " DisplayMarkets()");
+        // delete previous elements
+        m_scrollRect.onValueChanged.RemoveAllListeners();
+        foreach (StockTickerBehavior stockUI in m_displayStocks)
+        {
+            stockUI.ClearData();
+        }
+        m_displayStocks.Clear();
+
+        // make grid of stock ticker symbols
+        List<GameObject>.Enumerator iterStockTicker = m_goStockPanels.GetEnumerator();
+        Debug.Log(m_goStockPanels.Count + " elements found");
+        int i = 0;
+        foreach (Stock stock in markets)
+        {
+            // instantiate the grid UI object
+            GameObject goStockTicker = m_goStockPanels[i++];
+            if (goStockTicker == null)
+            {
+                Debug.Log("TickerGridBehavior: could not instantiate StockTicker prefab");
+                continue;
+            }
+            iterStockTicker.MoveNext();
 
             // get the behavior for this symbol
             StockTickerBehavior stockTicker = goStockTicker.GetComponent<StockTickerBehavior>();
-            goStockTicker.transform.SetParent(this.transform);
 
             if (stockTicker == null)
             {
                 Debug.Log("TickerGridBehavior: could not find StockTickerBehavior component in StockTicker prefab");
-                GameObject.Destroy(goStockTicker);
+                //GameObject.Destroy(goStockTicker);
             }
-            m_displayStocks.Add(goStockTicker);
+            m_displayStocks.Add(stockTicker);
             stockTicker.InitializeStockSymbol(stock, gameManager);
+            m_scrollRect.onValueChanged.AddListener(stockTicker.OnScrollRectValueChanged);
         }
     }
 
     public void DisplayPortfolio(List<Stock> portfolio)
     {
-        // delete previous elements
-        foreach (GameObject go in m_displayStocks)
-        {
-            GameObject.Destroy(go);
-        }
-
         DisplayMarkets(portfolio);
     }
     

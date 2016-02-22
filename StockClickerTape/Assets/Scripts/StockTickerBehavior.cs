@@ -10,6 +10,8 @@ public class StockTickerBehavior : MonoBehaviour
     //public Texture2D TestTexture;
     public GameObject LinePrefab;
     public int HistoryDepth;
+    public int ScaleRefreshSteps;
+    protected int m_nStepsToScaleRefresh;
 
     protected GameManager m_gameManager;
 
@@ -38,6 +40,36 @@ public class StockTickerBehavior : MonoBehaviour
         m_gameManager = gameManager;
         GameEvents.OnSharesChanged += OnSharesChanged;
         GameEvents.OnGameStep += OnGameStep;
+        SetData();
+    }
+
+    public void SetData()
+    {
+        if (m_graph != null && m_symbol != null)
+        {
+            m_graph.gameObject.SetActive(true);
+            m_symbol.gameObject.SetActive(true);
+            if (StockRef != null)
+            {
+                if (m_symbol != null)
+                {
+                    m_symbol.text = StockRef.Symbol;
+                }
+                if (m_price != null)
+                {
+                    m_price.text = StockRef.CurrentPrice.ToString("$#.00");
+                }
+                if (m_shares != null)
+                {
+                    m_shares.text = StockRef.Shares.ToString();
+                }
+                if (m_graphRect != null)
+                {
+
+                }
+            }
+            m_nStepsToScaleRefresh = ScaleRefreshSteps;
+        }
     }
 
     // Use this for initialization
@@ -49,7 +81,7 @@ public class StockTickerBehavior : MonoBehaviour
             Debug.Log("StockTickerBehavior: Could not find button component");
         }
 
-        Transform[] children = GetComponentsInChildren<Transform>();
+        Transform[] children = GetComponentsInChildren<Transform>(true);
         foreach (Transform child in children)
         {
             switch (child.name)
@@ -71,36 +103,20 @@ public class StockTickerBehavior : MonoBehaviour
                     break;
             }
         }
-        if (StockRef != null)
-        {
-            if (m_symbol != null)
-            {
-                m_symbol.text = StockRef.Symbol;
-            }
-            if (m_price != null)
-            {
-                m_price.text = StockRef.CurrentPrice.ToString("$#.00");
-            }
-            if (m_shares != null)
-            {
-                m_shares.text = StockRef.Shares.ToString();
-            }
-            if (m_graphRect != null)
-            {
-
-            }
-        }
+        SetData();
     }
 
     public void OnDestroy()
     {
-        GameEvents.OnGameStep -= OnGameStep;
-        GameEvents.OnSharesChanged -= OnSharesChanged;
+        ClearData();
     }
 
     public void OnStockClicked()
     {
-        m_gameManager.OnStockClicked(StockRef.ID);
+        if (m_stock != null)
+        {
+            m_gameManager.OnStockClicked(StockRef.ID);
+        }
     }
 
     public void OnGameStep()
@@ -118,7 +134,8 @@ public class StockTickerBehavior : MonoBehaviour
         {
             if (StockRef.Shares <= 0)
             {
-                GameObject.Destroy(gameObject);
+                //GameObject.Destroy(gameObject);
+                ClearData();
             }
             else if (m_shares != null)
             {
@@ -143,7 +160,7 @@ public class StockTickerBehavior : MonoBehaviour
 
     public void DrawStockChart()
     {
-
+        --m_nStepsToScaleRefresh;
         if (m_graphLines == null)
         {
             Debug.Log("Setting up line renderers for " + StockRef.Symbol);
@@ -195,41 +212,66 @@ public class StockTickerBehavior : MonoBehaviour
             float yPrev = (stepPrice - yDataMin) / (yDataMax - yDataMin) * (yMax - yMin) + yMin;
             m_graphLineVectors[m_graphLineVectors.Length - 1] = new Vector3(xCurrent, yPrev, -100f);
 
+            if (m_nStepsToScaleRefresh <= 0 || yPrev > yDataMax || yPrev < yDataMin) // note -- overwrites all data, does not use pre-existing data (can do if-else)
+            {
+                m_nStepsToScaleRefresh = ScaleRefreshSteps;
+                // TODO -- function -- and clean up member variables
+                yDataMin = 100000f;
+                yDataMax = 0f;
+                for (int j = 0; j < HistoryDepth; ++j)
+                {
+                    stepPrice = StockRef.GetPriceHistoryFromCurrentStep(j);
+                    if (stepPrice < yDataMin)
+                    {
+                        yDataMin = stepPrice;
+                    }
+                    if (stepPrice > yDataMax)
+                    {
+                        yDataMax = stepPrice;
+                    }
+                }
+
+                xCurrent = xMin;
+
+                for (int step = HistoryDepth - 1, idx = 0; step >= 0; --step, ++idx, xCurrent += xStep)
+                {
+                    stepPrice = StockRef.GetPriceHistoryFromCurrentStep(step);
+                    yPrev = (stepPrice - yDataMin) / (yDataMax - yDataMin) * (yMax - yMin) + yMin;
+                    m_graphLineVectors[idx] = new Vector3(xCurrent, yPrev, -100f);
+                    m_graphLines.SetPosition(idx, m_graphLineVectors[idx]);
+                    m_graphLines.SetColors(GraphLineColor, GraphLineColor);
+                }
+            }
             m_graphLines.SetPositions(m_graphLineVectors);
         }
-        
-        /*
-        for (int i = 9; i >= 0; --i) // show last ten market movements
+    }
+
+    public void OnScrollRectValueChanged(Vector2 vec2)
+    {
+        //Debug.Log(StockRef.Symbol + ": onScrollRectValueChanged(" + vec2.x + ", " + vec2.y + ")");
+        if (m_stock != null)
         {
-            StockRef.GetPriceHistoryFromCurrentStep(i);
+            for (int i = 0; i < HistoryDepth; ++i)
+            {
+                GameObject.Destroy(m_graphLines);
+            }
+            m_graphLines = null;
+            DrawStockChart();
         }
-        */
-        /*
-        Color[] colorsYouHave = new Color[graphTextureWidth * graphTextureHeight];
-        bool toggle = false;
-        int toggleRunner = 0;
-        for (int i = 0; i < m_graphTexture.width * m_graphTexture.height; ++i)
+    }
+
+    public void ClearData()
+    {
+        m_graph.gameObject.SetActive(false);
+        m_symbol.gameObject.SetActive(false);
+        m_stock = null;
+        GameEvents.OnGameStep -= OnGameStep;
+        GameEvents.OnSharesChanged -= OnSharesChanged;
+        if (m_graphLines != null)
         {
-            //colorsYouHave[i] = GraphLineColor;
-            if (!toggle)
-            {
-                colorsYouHave[i] = Color.white;
-                ++toggleRunner;
-            }
-            else
-            {
-                colorsYouHave[i] = GraphLineColor;
-                ++toggleRunner;
-            }
-            if (toggleRunner >= 10)
-            {
-                Debug.Log(StockRef.ID.ToString() + "TOGGLE!!!");
-                toggleRunner = 0;
-                toggle = !toggle;
-            }
+            GameObject.Destroy(m_graphLines);
         }
-        m_graphTexture.SetPixels(colorsYouHave); // TODO -- totes want this on another thread
-        m_graphTexture.Apply();
-        */
+
     }
 }
+
