@@ -124,7 +124,7 @@ public class UIManager : MonoBehaviour
         if (UIState != EUIState.Portfolio)
         {
             // change to Portfolio view
-            DisplayMarkets(gameManager.Portfolio);
+            DisplayPortfolio(gameManager.Portfolio);
             m_uiState = EUIState.Portfolio;
         }
     }

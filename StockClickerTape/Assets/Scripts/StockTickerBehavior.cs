@@ -41,6 +41,7 @@ public class StockTickerBehavior : MonoBehaviour
         GameEvents.OnSharesChanged += OnSharesChanged;
         GameEvents.OnGameStep += OnGameStep;
         SetData();
+        DrawStockChart();
     }
 
     public void SetData()
@@ -121,6 +122,10 @@ public class StockTickerBehavior : MonoBehaviour
 
     public void OnGameStep()
     {
+        if (StockRef == null)
+        {
+            return;
+        }
         if (m_price != null)
         {
             m_price.text = StockRef.CurrentPrice.ToString("$#.00");
@@ -130,12 +135,18 @@ public class StockTickerBehavior : MonoBehaviour
 
     public void OnSharesChanged(Stock refStock)
     {
+        if (StockRef == null)
+        {
+            return;
+        }
         if (StockRef.ID == refStock.ID) // I'd like the actual references to be the same -- should check this
         {
             if (StockRef.Shares <= 0)
             {
                 //GameObject.Destroy(gameObject);
                 ClearData();
+                GameEvents.OnSharesChanged -= OnSharesChanged;
+                GameEvents.OnGameStep -= OnGameStep;
             }
             else if (m_shares != null)
             {
@@ -251,7 +262,7 @@ public class StockTickerBehavior : MonoBehaviour
         {
             for (int i = 0; i < HistoryDepth; ++i)
             {
-                GameObject.Destroy(m_graphLines);
+                GameObject.Destroy(m_graphLines.gameObject);
             }
             m_graphLines = null;
             DrawStockChart();
@@ -267,7 +278,7 @@ public class StockTickerBehavior : MonoBehaviour
         GameEvents.OnSharesChanged -= OnSharesChanged;
         if (m_graphLines != null)
         {
-            GameObject.Destroy(m_graphLines);
+            GameObject.Destroy(m_graphLines.gameObject);
         }
 
     }

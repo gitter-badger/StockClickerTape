@@ -10,7 +10,7 @@ public class TickerGridBehavior : MonoBehaviour
     public int NumberOfStockPanels;
 
     protected ScrollRect m_scrollRect;
-    protected List<StockTickerBehavior> m_displayStocks;
+    //protected List<StockTickerBehavior> m_displayStocks;
     protected List<GameObject> m_goStockPanels;
 
 	// Use this for initialization
@@ -24,9 +24,9 @@ public class TickerGridBehavior : MonoBehaviour
         }
 
         m_goStockPanels = new List<GameObject>();
-        m_displayStocks = new List<StockTickerBehavior>();
+        //m_displayStocks = new List<StockTickerBehavior>();
 
-        m_scrollRect = GetComponent<ScrollRect>();
+        m_scrollRect = GetComponentInParent<ScrollRect>();
         if (m_scrollRect == null)
         {
             Debug.Log(this.name + ": ScrollRect component not found");
@@ -43,18 +43,23 @@ public class TickerGridBehavior : MonoBehaviour
             goStockTicker.transform.SetParent(this.transform);
             m_goStockPanels.Add(goStockTicker);
         }
+
+        m_scrollRect.verticalNormalizedPosition = 1f;
     }
 
     public void DisplayMarkets(List<Stock> markets)
     {
         Debug.Log(name + " DisplayMarkets()");
         // delete previous elements
+        //m_scrollRect.onValueChanged.RemoveAllListeners();
         m_scrollRect.onValueChanged.RemoveAllListeners();
+        /*
         foreach (StockTickerBehavior stockUI in m_displayStocks)
         {
             stockUI.ClearData();
         }
         m_displayStocks.Clear();
+        */
 
         // make grid of stock ticker symbols
         List<GameObject>.Enumerator iterStockTicker = m_goStockPanels.GetEnumerator();
@@ -78,15 +83,60 @@ public class TickerGridBehavior : MonoBehaviour
                 Debug.Log("TickerGridBehavior: could not find StockTickerBehavior component in StockTicker prefab");
                 //GameObject.Destroy(goStockTicker);
             }
-            m_displayStocks.Add(stockTicker);
+            //m_displayStocks.Add(stockTicker);
             stockTicker.InitializeStockSymbol(stock, gameManager);
             m_scrollRect.onValueChanged.AddListener(stockTicker.OnScrollRectValueChanged);
         }
     }
 
-    public void DisplayPortfolio(List<Stock> portfolio)
+    public void DisplayPortfolio(List<Stock> portfolio) // TODO -- remove parameter
     {
-        DisplayMarkets(portfolio);
+        //DisplayMarkets(portfolio);
+
+        Debug.Log(name + " DisplayPortfolio()");
+        // delete previous elements
+        m_scrollRect.onValueChanged.RemoveAllListeners();
+        /*
+        foreach (StockTickerBehavior stockUI in m_displayStocks)
+        {
+            stockUI.ClearData();
+        }
+        m_displayStocks.Clear();
+        */
+
+        // make grid of stock ticker symbols
+        List<GameObject>.Enumerator iterStockTicker = m_goStockPanels.GetEnumerator();
+        int i = 0;
+        foreach (Stock stock in gameManager.Markets)
+        {
+            // instantiate the grid UI object
+            GameObject goStockTicker = m_goStockPanels[i++];
+            if (goStockTicker == null)
+            {
+                Debug.Log("TickerGridBehavior: could not instantiate StockTicker prefab");
+                continue;
+            }
+            iterStockTicker.MoveNext();
+
+            // get the behavior for this symbol
+            StockTickerBehavior stockTicker = goStockTicker.GetComponent<StockTickerBehavior>();
+
+            if (stockTicker == null)
+            {
+                Debug.Log("TickerGridBehavior: could not find StockTickerBehavior component in StockTicker prefab");
+                //GameObject.Destroy(goStockTicker);
+            }
+            //m_displayStocks.Add(stockTicker);
+            if (stock.Shares > 0)
+            {
+                stockTicker.InitializeStockSymbol(stock, gameManager);
+                m_scrollRect.onValueChanged.AddListener(stockTicker.OnScrollRectValueChanged);
+            }
+            else
+            {
+                stockTicker.ClearData();
+            }
+        }
     }
     
 }
