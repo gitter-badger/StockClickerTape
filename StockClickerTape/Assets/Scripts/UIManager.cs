@@ -67,7 +67,8 @@ public class UIManager : MonoBehaviour
         }
 
         GameEvents.OnGameStep += OnGameStep;
-        GameEvents.OnSharesChanged += OnSharesChanged;
+        GameEvents.OnBuy += OnSharesChanged;
+        GameEvents.OnSell += OnSharesChanged;
         GameEvents.OnCashChanged += OnCashChanged;
         GameEvents.OnMarketEvent += OnMarketEvent;
 

@@ -40,7 +40,7 @@ public class TickerGridBehavior : MonoBehaviour
                 Debug.Log("TickerGridBehavior: could not instantiate StockTicker prefab");
                 continue;
             }
-            goStockTicker.transform.SetParent(this.transform);
+            goStockTicker.transform.SetParent(transform);
             m_goStockPanels.Add(goStockTicker);
         }
 

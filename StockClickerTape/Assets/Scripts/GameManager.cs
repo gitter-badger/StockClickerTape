@@ -182,7 +182,7 @@ public class GameManager : MonoBehaviour
                                 marketStock.Shares = 1;
                                 marketStock.CostBasis = marketStock.CurrentPrice;
                                 marketStock.SellValue = marketStock.CurrentPrice;
-                                GameEvents.BroadcastSharesChanged(marketStock);
+                                GameEvents.BroadcastBuy(marketStock);
                                 m_portfolio.Add(marketStock);
                                 PlayerCash -= marketStock.CurrentPrice;
                                 GameEvents.BroadcastCashChanged(PlayerCash);
@@ -193,7 +193,7 @@ public class GameManager : MonoBehaviour
                             ++portfolioStock.Shares; // could calculate other values based on the fundamentals of Shares and Price
                             portfolioStock.CostBasis += marketStock.CurrentPrice;
                             portfolioStock.SellValue = marketStock.CurrentPrice * portfolioStock.Shares;
-                            GameEvents.BroadcastSharesChanged(portfolioStock);
+                            GameEvents.BroadcastBuy(portfolioStock);
                             PlayerCash -= marketStock.CurrentPrice;
                             GameEvents.BroadcastCashChanged(PlayerCash);
                         }
@@ -210,7 +210,7 @@ public class GameManager : MonoBehaviour
                     {
                         --portfolioStock.Shares;
                         PlayerCash += portfolioStock.CurrentPrice;
-                        GameEvents.BroadcastSharesChanged(portfolioStock);
+                        GameEvents.BroadcastSell(portfolioStock);
                         GameEvents.BroadcastCashChanged(PlayerCash);
                     }
                     if (portfolioStock.Shares <= 0)

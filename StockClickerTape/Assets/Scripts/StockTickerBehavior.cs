@@ -15,6 +15,8 @@ public class StockTickerBehavior : MonoBehaviour
 
     protected GameManager m_gameManager;
 
+    protected static float s_graphZOffset = 50f;
+
     // UI
     protected Button m_button;
     protected Text m_symbol;
@@ -38,7 +40,8 @@ public class StockTickerBehavior : MonoBehaviour
     {
         m_stock = stock;
         m_gameManager = gameManager;
-        GameEvents.OnSharesChanged += OnSharesChanged;
+        GameEvents.OnBuy += OnSharesChanged;
+        GameEvents.OnSell += OnSharesChanged;
         GameEvents.OnGameStep += OnGameStep;
         SetData();
         DrawStockChart();
@@ -145,7 +148,8 @@ public class StockTickerBehavior : MonoBehaviour
             {
                 //GameObject.Destroy(gameObject);
                 ClearData();
-                GameEvents.OnSharesChanged -= OnSharesChanged;
+                GameEvents.OnBuy -= OnSharesChanged;
+                GameEvents.OnSell -= OnSharesChanged;
                 GameEvents.OnGameStep -= OnGameStep;
             }
             else if (m_shares != null)
@@ -196,6 +200,7 @@ public class StockTickerBehavior : MonoBehaviour
             }
             
             GameObject goLine = GameObject.Instantiate(LinePrefab);
+            goLine.transform.SetParent(transform);
             m_graphLines = goLine.GetComponent<LineRenderer>();
             m_graphLineVectors = new Vector3[HistoryDepth];
             m_graphLines.SetVertexCount(HistoryDepth);
@@ -205,7 +210,7 @@ public class StockTickerBehavior : MonoBehaviour
             {
                 float stepPrice = StockRef.GetPriceHistoryFromCurrentStep(step);
                 float yPrev = (stepPrice - yDataMin) / (yDataMax - yDataMin) * (yMax - yMin) + yMin;
-                m_graphLineVectors[idx] = new Vector3(xCurrent, yPrev, -100f);
+                m_graphLineVectors[idx] = new Vector3(xCurrent, yPrev, s_graphZOffset);
                 m_graphLines.SetPosition(idx, m_graphLineVectors[idx]);
                 m_graphLines.SetColors(GraphLineColor, GraphLineColor);
             }
@@ -215,11 +220,11 @@ public class StockTickerBehavior : MonoBehaviour
             // once the original graph has been set up, just remove the first vertex, shift the others over, and add a new one
             for (int i = 0; i < m_graphLineVectors.Length - 1; ++i)
             {
-                m_graphLineVectors[i] = new Vector3(m_graphLineVectors[i + 1].x - xStep, m_graphLineVectors[i + 1].y, -100f);
+                m_graphLineVectors[i] = new Vector3(m_graphLineVectors[i + 1].x - xStep, m_graphLineVectors[i + 1].y, s_graphZOffset);
             }
             float stepPrice = StockRef.GetPriceHistoryFromCurrentStep(0);
             float yPrev = (stepPrice - yDataMin) / (yDataMax - yDataMin) * (yMax - yMin) + yMin;
-            m_graphLineVectors[m_graphLineVectors.Length - 1] = new Vector3(xCurrent, yPrev, -100f);
+            m_graphLineVectors[m_graphLineVectors.Length - 1] = new Vector3(xCurrent, yPrev, s_graphZOffset);
 
             if (m_nStepsToScaleRefresh <= 0 || yPrev > yDataMax || yPrev < yDataMin) // note -- overwrites all data, does not use pre-existing data (can do if-else)
             {
@@ -246,7 +251,7 @@ public class StockTickerBehavior : MonoBehaviour
                 {
                     stepPrice = StockRef.GetPriceHistoryFromCurrentStep(step);
                     yPrev = (stepPrice - yDataMin) / (yDataMax - yDataMin) * (yMax - yMin) + yMin;
-                    m_graphLineVectors[idx] = new Vector3(xCurrent, yPrev, -100f);
+                    m_graphLineVectors[idx] = new Vector3(xCurrent, yPrev, s_graphZOffset);
                     m_graphLines.SetPosition(idx, m_graphLineVectors[idx]);
                     m_graphLines.SetColors(GraphLineColor, GraphLineColor);
                 }
@@ -275,7 +280,8 @@ public class StockTickerBehavior : MonoBehaviour
         m_symbol.gameObject.SetActive(false);
         m_stock = null;
         GameEvents.OnGameStep -= OnGameStep;
-        GameEvents.OnSharesChanged -= OnSharesChanged;
+        GameEvents.OnBuy -= OnSharesChanged;
+        GameEvents.OnSell -= OnSharesChanged;
         if (m_graphLines != null)
         {
             GameObject.Destroy(m_graphLines.gameObject);
